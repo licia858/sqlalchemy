@@ -73,6 +73,8 @@ def tobs():
 @app.route("/api/v1.0/<date>")
 def start(date):
 
+    
+
     blankdate = date.replace(" "," ")
 
     
@@ -82,7 +84,7 @@ def start(date):
     all_names = list(np.ravel(results))
 
     for row in all_names:
-        search_date =  row["date"].replace(" ", " ")
+        search_date =  row["date"].replace(" "," ")
 
         if search_date == blankdate:
             return jsonify(row)
@@ -92,7 +94,7 @@ def start(date):
 @app.route("/api/v1.0/<start>/<end>") 
 def normaltemp(start_date, end_date):
 
-    emptydate = []
+    
 
     return session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
     filter(Measurement.station == Station.station).\
