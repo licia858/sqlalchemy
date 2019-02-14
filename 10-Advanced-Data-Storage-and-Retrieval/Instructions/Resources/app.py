@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 
 ##Database setup
-engine = create_engine("sqlite:///hawaii.sqlite")
+engine = create_engine("sqlite:///hawaii.sqlite?check_same_thread=False")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -57,9 +57,6 @@ def stations():
     # Query all station
     results = session.query(Measurement.station).group_by(Measurement.station).all()
 
-    # Convert list of tuples into normal list
-    #station_names = list(np.ravel(results))
-
     return jsonify(results)
 
 @app.route("/api/v1.0/tobs")   
@@ -73,23 +70,36 @@ def tobs():
       tobs.append({row[0]:row[1]})
   return jsonify(tobs)
 
-@app.route("/api/v1.0/<start>")
-def start(start):
+@app.route("/api/v1.0/<date>")
+def start(date):
 
-    blankdate = start.replace(" ")
+    blankdate = date.replace(" "," ")
 
-    sel = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
-    MeasurementDate_query = session.query(*sel).\
+    
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
     filter(Measurement.date >= "2010-01-01").all()
 
-    for date in MeasurementDate_query:
-        search_date =  date["start"].replace(" ")
+    all_names = list(np.ravel(results))
+
+    for row in all_names:
+        search_date =  row["date"].replace(" ", " ")
 
         if search_date == blankdate:
-            return jsonify(date)
+            return jsonify(row)
+   
     return jsonify({"error"})
     
-@app.route("/api/v1.0/<start>/<end><br/>")
+@app.route("/api/v1.0/<start>/<end>") 
+def normaltemp(start_date, end_date):
+
+    emptydate = []
+
+    return session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+    filter(Measurement.station == Station.station).\
+    filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).\
+    group_by(Measurement.station).all()
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
